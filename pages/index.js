@@ -1,65 +1,66 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import React, { useEffect } from "react";
+import { useGetData } from "../components/api";
+import { ExportReactCSV } from "../components/ExportReactCSV";
+import Chart from "../components/Charts";
+import Table from "../components/Table";
+import $ from "jquery";
+import DataTable from "datatables.net";
+import MetricCard from "../components/cards";
 
-export default function Home() {
+$.DataTable = DataTable;
+
+export default function IndexPage() {
+  useEffect(() => {
+    $(document).ready(function ($) {
+      $("#tableCovid").DataTable({
+        paging: false,
+      });
+    });
+  });
+
+  const { covids, error } = useGetData("/");
+
+  if (error) return <h1>Something went wrong!</h1>;
+  if (!covids) return <h1>Loading...</h1>;
+
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
+    <div className="container">
+      <div className="card">
+        <div className="card-header d-flex">
+          <h2>Covid Update Indonesia</h2>
+          <div className="ml-auto p-2">
+            <ExportReactCSV csvData={covids.regions} fileName={"covid.csv"} />
+          </div>
         </div>
-      </main>
+        <div className="card-body">
+          <MetricCard metric={covids.numbers} />
+        </div>
+      </div>
 
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
+      <table
+        id="tableCovid"
+        className="table table-striped table-border"
+        style={{ width: "100%" }}
+      >
+        <thead>
+          <tr>
+            <th>Province</th>
+            <th>Positive Cases</th>
+            <th>Recovered Cases</th>
+            <th>Death Cases</th>
+          </tr>
+        </thead>
+        <tbody>
+          <>
+            {covids.regions.map((covid, index) => (
+              <Table covid={covid} key={index} />
+            ))}
+          </>
+        </tbody>
+      </table>
+      {covids.regions.map((covid, index) => (
+              <Chart covid={covid} key={index} />
+            ))}
     </div>
-  )
+  );
 }
