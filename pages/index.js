@@ -5,7 +5,7 @@ import Chart from "../components/Charts";
 import Table from "../components/Table";
 import $ from "jquery";
 import DataTable from "datatables.net";
-import MetricCard from "../components/cards";
+import MetricCard from "../components/Cards";
 
 $.DataTable = DataTable;
 
