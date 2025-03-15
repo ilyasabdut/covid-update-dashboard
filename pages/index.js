@@ -11,25 +11,21 @@ $.DataTable = DataTable;
 
 export default function IndexPage() {
   const tableRef = useRef(null);
-  const { covids, error } = useGetData("/");
+  const { covids, error } = useGetData(); // Removed unused path argument
 
   useEffect(() => {
-    if (tableRef.current) {
-      const table = $(tableRef.current).DataTable({
-        paging: false,
-        destroy: true, // Ensures reinitialization doesn't break things
-      });
-
-      return () => {
-        table.destroy();
-      };
+    if (covids?.regions?.length > 0 && tableRef.current) {
+      if (!$.fn.DataTable.isDataTable(tableRef.current)) {
+        $(tableRef.current).DataTable({
+          paging: false,
+          destroy: true, // Ensures reinitialization doesn't break things
+        });
+      }
     }
   }, [covids]);
 
   if (error) return <h1>Something went wrong: {error.message}</h1>;
   if (!covids) return <h1>Loading...</h1>;
-
-  console.log(covids.regions);
 
   return (
     <div className="container">
@@ -37,11 +33,11 @@ export default function IndexPage() {
         <div className="card-header d-flex">
           <h2>Covid Update Indonesia</h2>
           <div className="ml-auto p-2">
-            <ExportReactCSV csvData={covids.regions} fileName={"covid.csv"} />
+            <ExportReactCSV csvData={covids?.regions || []} fileName={"covid.csv"} />
           </div>
         </div>
         <div className="card-body">
-          <MetricCard metric={covids.numbers} />
+          <MetricCard metric={covids?.numbers} />
         </div>
       </div>
 
@@ -60,13 +56,13 @@ export default function IndexPage() {
           </tr>
         </thead>
         <tbody>
-          {covids.regions.map((covid, index) => (
+          {covids?.regions?.map((covid, index) => (
             <Table covid={covid} key={index} />
           ))}
         </tbody>
       </table>
 
-      {covids.regions.map((covid, index) => (
+      {covids?.regions?.map((covid, index) => (
         <Chart covid={covid} key={index} />
       ))}
     </div>

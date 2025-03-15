@@ -1,11 +1,16 @@
 import useSWR from "swr";
 
-const fetcher = url => fetch(url).then(res => res.json());
-const baseURL = "/api/covid"; // Use local Next.js API route
+const fetcher = async (url) => {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to fetch data");
+  return res.json();
+};
 
 export const useGetData = () => {
-  const { data: covids, error } = useSWR(baseURL, fetcher);
+  const { data: covids, error } = useSWR("https://wallet-transaction-backend.onrender.com/api/external/covid", fetcher);
 
+  console.log("Fetched data:", covids || "Loading...");
+  
   return { covids, error };
 };
 

@@ -1,15 +1,19 @@
 export default async function handler(req, res) {
     try {
       const response = await fetch("https://dekontaminasi.com/api/id/covid19/stats");
+  
+      if (!response.ok) {
+        return res.status(response.status).json({ message: "Failed to fetch data" });
+      }
+  
       const data = await response.json();
   
-      res.setHeader("Access-Control-Allow-Origin", "*"); // Enable CORS
-      res.setHeader("Access-Control-Allow-Methods", "GET"); 
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  
+      res.setHeader("Content-Type", "application/json");
+      res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate"); // Optional caching
       res.status(200).json(data);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch data", error });
+      console.error("API Error:", error);
+      res.status(500).json({ message: "Internal server error", error: error.message });
     }
   }
   
