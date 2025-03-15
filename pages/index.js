@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useGetData } from "../components/api";
 import { ExportReactCSV } from "../components/ExportReactCSV";
 import Chart from "../components/Charts";
@@ -10,18 +10,26 @@ import MetricCard from "../components/cards";
 $.DataTable = DataTable;
 
 export default function IndexPage() {
-  useEffect(() => {
-    $(document).ready(function ($) {
-      $("#tableCovid").DataTable({
-        paging: false,
-      });
-    });
-  });
-
+  const tableRef = useRef(null);
   const { covids, error } = useGetData("/");
 
-  if (error) return <h1>Something went wrong!</h1>;
+  useEffect(() => {
+    if (tableRef.current) {
+      const table = $(tableRef.current).DataTable({
+        paging: false,
+        destroy: true, // Ensures reinitialization doesn't break things
+      });
+
+      return () => {
+        table.destroy();
+      };
+    }
+  }, [covids]);
+
+  if (error) return <h1>Something went wrong: {error.message}</h1>;
   if (!covids) return <h1>Loading...</h1>;
+
+  console.log(covids.regions);
 
   return (
     <div className="container">
@@ -38,6 +46,7 @@ export default function IndexPage() {
       </div>
 
       <table
+        ref={tableRef}
         id="tableCovid"
         className="table table-striped table-border"
         style={{ width: "100%" }}
@@ -51,16 +60,15 @@ export default function IndexPage() {
           </tr>
         </thead>
         <tbody>
-          <>
-            {covids.regions.map((covid, index) => (
-              <Table covid={covid} key={index} />
-            ))}
-          </>
+          {covids.regions.map((covid, index) => (
+            <Table covid={covid} key={index} />
+          ))}
         </tbody>
       </table>
+
       {covids.regions.map((covid, index) => (
-              <Chart covid={covid} key={index} />
-            ))}
+        <Chart covid={covid} key={index} />
+      ))}
     </div>
   );
 }

@@ -1,35 +1,49 @@
 name: Build and Deploy
-on: [push]
+
+on:
+  push:
+    branches:
+      - master # Trigger deployment on push to the main branch
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./src
 
     steps:
+      # Step 1: Checkout the repository
       - name: Checkout 🛎️
-        uses: actions/checkout@v2 # If you're using actions/checkout@v2 you must set persist-credentials to false in most cases for the deployment to work correctly.
+        uses: actions/checkout@v3
         with:
-          persist-credentials: false
+          persist-credentials: false # Required for deployment to work correctly
 
-      - name: Cache  💾
-        uses: actions/cache@v2
+      # Step 2: Cache dependencies
+      - name: Cache 💾
+        uses: actions/cache@v3
         with:
-          path: ${{ github.workspace }}/.next/cache
+          path: .next/cache
           key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-
 
-      - name: Install and Build 🔧 # This example project is built using npm and outputs the result to the 'build' folder. Replace with the commands required to build your project, or remove this step entirely if your site is pre-built.
-        uses: actions/setup-node@v1
-      # - run: npm install
-      #- run: npm run build
-        env:
-            CI: true
+      # Step 3: Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18 # Use the Node.js version compatible with your project
 
+      # Step 4: Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Step 5: Build the Next.js app
+      - name: Build 🔧
+        run: npm run build
+
+      # Step 6: Deploy to GitHub Pages
       - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@3.6.2
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: gh-pages # The branch the action should deploy to.
-          FOLDER: src/out # The folder the action should deploy.
+          BRANCH: gh-pages # The branch to deploy to
+          FOLDER: out # The folder to deploy (default output folder for static export)
           CLEAN: true # Automatically remove deleted files from the deploy branch
